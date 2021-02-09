@@ -46,12 +46,12 @@ def parse_url(url):
     title_tag = soup.find('table').find('h1')
     book_title, book_author = map(lambda title: title.strip(), title_tag.text.split('::'))
     book_image_url = urljoin('https://tululu.org', soup.find(class_='bookimage').find('img')['src'])
-    comments = []
-    for comment in soup.find_all('div', class_='texts'):
-        comments.append(comment.find('span', class_='black').text)
+    comments = [comment.find('span', class_='black').text for comment in soup.find_all('div', class_='texts')]
+
+    book_genres = [genre.text for genre in soup.find('span', class_='d_book').find_all('a')]
 
     print(book_title)
-    print(comments)
+    print(book_genres)
     return book_title, book_image_url
 
 
