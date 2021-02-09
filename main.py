@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse, unquote
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +31,7 @@ def main():
             file_path = download_txt(
                 f'https://tululu.org/txt.php?id={book_number + 1}', book_number + 1, book_title, books_path)
             # print(file_path)
-            download_image(book_number + 1, book_image_url,books_images_path)
+            download_image(book_image_url, books_images_path)
         except requests.HTTPError:
             pass
 
@@ -50,7 +49,7 @@ def parse_url(url):
     comments = []
     for comment in soup.find_all('div', class_='texts'):
         comments.append(comment.find('span', class_='black').text)
-    
+
     return book_title, book_image_url
 
 
@@ -58,7 +57,7 @@ def download_txt(url, book_id, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
-        id (int): Уникальный id книги
+        book_id (int): Уникальный id книги
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
     Returns:
@@ -74,7 +73,7 @@ def download_txt(url, book_id, filename, folder='books/'):
     return file_path
 
 
-def download_image(file_name, url, folder='images/'):
+def download_image(url, folder='images/'):
     response = requests.get(url, verify=False)
     response.raise_for_status()
     file_path = os.path.join(folder, os.path.basename(unquote(urlparse(url).path)))
