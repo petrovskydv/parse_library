@@ -28,10 +28,10 @@ def main():
         book_url = f'https://tululu.org/b{book_number + 1}/'
         try:
             book_title, book_image_url = parse_url(book_url)
-            file_path = download_txt(
-                f'https://tululu.org/txt.php?id={book_number + 1}', book_number + 1, book_title, books_path)
-            # print(file_path)
-            download_image(book_image_url, books_images_path)
+            # file_path = download_txt(
+            #     f'https://tululu.org/txt.php?id={book_number + 1}', book_number + 1, book_title, books_path)
+            # # print(file_path)
+            # download_image(book_image_url, books_images_path)
         except requests.HTTPError:
             pass
 
@@ -50,6 +50,8 @@ def parse_url(url):
     for comment in soup.find_all('div', class_='texts'):
         comments.append(comment.find('span', class_='black').text)
 
+    print(book_title)
+    print(comments)
     return book_title, book_image_url
 
 
