@@ -11,12 +11,6 @@ from pathvalidate import sanitize_filename
 logger = logging.getLogger(__name__)
 
 
-def check_for_redirect(response):
-    if len(response.history) > 0:
-        logger.info('произошел редирект на основную страницу. переходим к следующему id')
-        raise requests.HTTPError
-
-
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -28,8 +22,8 @@ def main():
     os.makedirs(books_images_path, exist_ok=True)
 
     parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
-    parser.add_argument('start_id', help='с какой страницы начинать')
-    parser.add_argument('end_id', help='по какую страницу качать')
+    parser.add_argument('start_id', nargs='?', default='1', help='с какой страницы начинать')
+    parser.add_argument('end_id', nargs='?', default='1000', help='по какую страницу качать')
     args = parser.parse_args()
 
     urllib3.disable_warnings()
@@ -45,6 +39,15 @@ def main():
             download_image(book_information['image_url'], books_images_path)
         except requests.HTTPError:
             pass
+        except KeyboardInterrupt:
+            print('Скачивание остановлено')
+            exit()
+
+
+def check_for_redirect(response):
+    if len(response.history) > 0:
+        logger.info('произошел редирект на основную страницу. переходим к следующему id')
+        raise requests.HTTPError
 
 
 def parse_book_page(content, library_url):
@@ -76,7 +79,6 @@ def download_txt(url, book_id, filename, folder='books/'):
     file_path = os.path.join(folder, f'{book_id}. {sanitize_filename(filename)}.txt')
     response = requests.get(url, verify=False)
     response.raise_for_status()
-    check_for_redirect(response)
     with open(file_path, 'wb') as file:
         file.write(response.content)
     logger.info(f'скачали книгу: {file_path}')
