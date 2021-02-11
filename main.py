@@ -85,11 +85,11 @@ def download_txt(url, book_id, filename, folder='books/'):
     return file_path
 
 
-def download_image(url, folder='images/'):
+def download_image(url, folder='images/', rewrite=False):
     response = requests.get(url, verify=False)
     response.raise_for_status()
     file_path = os.path.join(folder, os.path.basename(unquote(urlparse(url).path)))
-    if os.path.exists(file_path):
+    if not rewrite and os.path.exists(file_path):
         return file_path
     with open(file_path, 'wb') as file:
         file.write(response.content)
