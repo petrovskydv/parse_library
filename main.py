@@ -22,12 +22,12 @@ def main():
     os.makedirs(books_images_path, exist_ok=True)
 
     parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
-    parser.add_argument('start_id', nargs='?', default='1', help='с какой страницы начинать')
-    parser.add_argument('end_id', nargs='?', default='1000', help='по какую страницу качать')
+    parser.add_argument('start_id', nargs='?', default='1', type=int, help='с какой страницы начинать')
+    parser.add_argument('end_id', nargs='?', default='1000', type=int, help='по какую страницу качать')
     args = parser.parse_args()
 
     urllib3.disable_warnings()
-    for book_number in range(int(args.start_id), int(args.end_id) + 1):
+    for book_number in range(args.start_id, args.end_id + 1):
         book_url = f'{library_url}/b{book_number}/'
         try:
             logger.info(f'ищем книгу по адресу {book_url}')
