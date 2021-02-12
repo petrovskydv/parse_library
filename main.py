@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import sys
 from urllib.parse import urljoin, urlparse, unquote
 
 import requests
@@ -34,20 +35,26 @@ def main():
             response = requests.get(book_url, verify=False)
             response.raise_for_status()
             check_for_redirect(response)
-            book_information = parse_book_page(response.text, book_url)
-            download_txt(f'{library_url}/txt.php?id={book_number}', book_number, book_information['title'], books_path)
-            download_image(book_information['image_url'], books_images_path)
-        except requests.HTTPError:
-            pass
+            book = parse_book_page(response.text, book_url)
+            download_txt(f'{library_url}/txt.php?id={book_number}', book_number, book['title'], books_path)
+            download_image(book['image_url'], books_images_path)
+        except requests.HTTPError as e:
+            print(e, file=sys.stderr)
+            logger.exception(e)
+        except requests.ConnectionError as e:
+            logger.exception(e)
+            print(e, file=sys.stderr)
+        except requests.TooManyRedirects:
+            print('обнаружен редирект', file=sys.stderr)
         except KeyboardInterrupt:
             print('Скачивание остановлено')
-            exit()
+            sys.exit()
 
 
 def check_for_redirect(response):
     if len(response.history) > 0:
         logger.info('произошел редирект на основную страницу. переходим к следующему id')
-        raise requests.HTTPError
+        raise requests.TooManyRedirects
 
 
 def parse_book_page(content, library_url):
@@ -65,14 +72,14 @@ def parse_book_page(content, library_url):
     genres_string = soup.find('span', class_='d_book').find_all('a')
     book_genres = [genre.text for genre in genres_string]
 
-    book_information = {
+    book = {
         'title': book_title,
         'author': book_author,
         'image_url': book_image_url,
         'comments': book_comments,
         'genres': book_genres
     }
-    return book_information
+    return book
 
 
 def download_txt(url, book_id, filename, folder='books/'):
@@ -88,6 +95,7 @@ def download_txt(url, book_id, filename, folder='books/'):
     file_path = os.path.join(folder, f'{book_id}. {sanitize_filename(filename)}.txt')
     response = requests.get(url, verify=False)
     response.raise_for_status()
+    check_for_redirect(response)
     with open(file_path, 'wb') as file:
         file.write(response.content)
     logger.info(f'скачали книгу: {file_path}')
@@ -97,6 +105,7 @@ def download_txt(url, book_id, filename, folder='books/'):
 def download_image(url, folder='images/', rewrite=False):
     response = requests.get(url, verify=False)
     response.raise_for_status()
+    check_for_redirect(response)
     file_path = os.path.join(folder, os.path.basename(unquote(urlparse(url).path)))
     if not rewrite and os.path.exists(file_path):
         return file_path
