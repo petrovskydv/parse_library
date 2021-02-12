@@ -34,7 +34,7 @@ def main():
             response = requests.get(book_url, verify=False)
             response.raise_for_status()
             check_for_redirect(response)
-            book_information = parse_book_page(response.text, library_url)
+            book_information = parse_book_page(response.text, book_url)
             download_txt(f'{library_url}/txt.php?id={book_number}', book_number, book_information['title'], books_path)
             download_image(book_information['image_url'], books_images_path)
         except requests.HTTPError:
