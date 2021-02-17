@@ -17,15 +17,21 @@ logger = logging.getLogger(__name__)
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    books_path = 'books/'
-    os.makedirs(books_path, exist_ok=True)
-    books_images_path = 'images/'
-    os.makedirs(books_images_path, exist_ok=True)
-
     parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
     parser.add_argument('--start_page', nargs='?', default='1', type=int, help='с какой страницы начинать')
     parser.add_argument('--end_page', nargs='?', default='1000', type=int, help='по какую страницу качать')
+    parser.add_argument('--skip_imgs', nargs='?', default=False, type=bool, help='не скачивать картинки')
+    parser.add_argument('--skip_txt', nargs='?', default=False, type=bool, help='не скачивать книги')
+    parser.add_argument('--json_path', nargs='?', default='books.json', type=str,
+                        help='путь к json файлу с результатами')
+    parser.add_argument('--dest_folder', nargs='?', default='', type=str,
+                        help='путь к каталогу с результатами парсинга')
     args = parser.parse_args()
+
+    books_path = os.path.join(args.dest_folder, 'books')
+    os.makedirs(books_path, exist_ok=True)
+    books_images_path = os.path.join(args.dest_folder, 'images')
+    os.makedirs(books_images_path, exist_ok=True)
 
     books_collection_url = 'https://tululu.org/l55/'
 
@@ -53,10 +59,12 @@ def main():
                 book_response.raise_for_status()
                 parse_tululu.check_for_redirect(response)
                 book = parse_tululu.parse_book_page(book_response.text, book_url)
-                book_path = parse_tululu.download_txt(book['text_url'], book['id'], book['title'], books_path)
-                img_src = parse_tululu.download_image(book['image_url'], books_images_path)
-                book['book_path'] = book_path
-                book['img_src'] = img_src
+                if not args.skip_txt:
+                    book_path = parse_tululu.download_txt(book['text_url'], book['id'], book['title'], books_path)
+                    book['book_path'] = book_path
+                if not args.skip_imgs:
+                    img_src = parse_tululu.download_image(book['image_url'], books_images_path)
+                    book['img_src'] = img_src
                 books.append(book)
             except requests.HTTPError as e:
                 print(e, file=sys.stderr)
@@ -70,12 +78,11 @@ def main():
                 print('Скачивание остановлено')
                 sys.exit()
             except parse_tululu.BookError as e:
-                logger.exception(e)
                 print(e, file=sys.stderr)
 
         page_number += 1
 
-    with open("books.json", "w") as file:
+    with open(args.json_path, 'w') as file:
         json.dump(books, file, ensure_ascii=False, indent=4)
 
 
