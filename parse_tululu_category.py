@@ -28,10 +28,12 @@ def main():
                         help='путь к каталогу с результатами парсинга')
     args = parser.parse_args()
 
-    books_path = os.path.join(args.dest_folder, 'books')
-    os.makedirs(books_path, exist_ok=True)
-    books_images_path = os.path.join(args.dest_folder, 'images')
-    os.makedirs(books_images_path, exist_ok=True)
+    if not args.skip_txt:
+        books_path = os.path.join(args.dest_folder, 'books')
+        os.makedirs(books_path, exist_ok=True)
+    if not args.skip_imgs:
+        books_images_path = os.path.join(args.dest_folder, 'images')
+        os.makedirs(books_images_path, exist_ok=True)
 
     books_collection_url = 'https://tululu.org/l55/'
 
