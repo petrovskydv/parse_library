@@ -1,12 +1,14 @@
-import argparse
+import json
 import logging
 import os
-from urllib.parse import urljoin, urlparse, unquote
+import sys
+from urllib.parse import urljoin
 
 import requests
 import urllib3
 from bs4 import BeautifulSoup
-from pathvalidate import sanitize_filename
+
+import parse_tululu
 
 logger = logging.getLogger(__name__)
 
@@ -14,43 +16,51 @@ logger = logging.getLogger(__name__)
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    library_url = 'https://tululu.org'
-
     books_path = 'books/'
     os.makedirs(books_path, exist_ok=True)
     books_images_path = 'images/'
     os.makedirs(books_images_path, exist_ok=True)
 
-    # parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
-    # parser.add_argument('start_id', nargs='?', default='1', type=int, help='с какой страницы начинать')
-    # parser.add_argument('end_id', nargs='?', default='1000', type=int, help='по какую страницу качать')
-    # args = parser.parse_args()
-
     books_collection_url = 'https://tululu.org/l55/'
 
     urllib3.disable_warnings()
-    response = requests.get(books_collection_url, verify=False)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'lxml')
-    books = soup.find_all(class_='d_book')
-    for book in books:
-        book_href = book.find('a')['href']
-        book_url = urljoin(books_collection_url, book_href)
-        print(book_url)
+    books = []
+    pages_number = 2
+    page_number = 1
 
-    pages = soup.find_all(class_='npage')
-    last_page = int(pages[-1].text)
-    for page_number in range(2, last_page):
+    while page_number < 5:
         response = requests.get(f'{books_collection_url}{page_number}/', verify=False)
         logger.info(f'{books_collection_url}{page_number}/')
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        books = soup.find_all(class_='d_book')
-        for book in books:
-            book_href = book.find('a')['href']
+
+        pages = soup.find_all(class_='npage')
+        pages_number = int(pages[-1].text)
+
+        book_cards = soup.find_all(class_='d_book')
+        for book_card in book_cards:
+            book_href = book_card.find('a')['href']
             book_url = urljoin(books_collection_url, book_href)
             print(book_url)
 
+            book_response = requests.get(book_url, verify=False)
+            book_response.raise_for_status()
+            try:
+                book = parse_tululu.parse_book_page(book_response.text, book_url)
+                book_path = parse_tululu.download_txt(book['text_url'], book['id'], book['title'], books_path)
+                img_src = parse_tululu.download_image(book['image_url'], books_images_path)
+                book['book_path'] = book_path
+                book['img_src'] = img_src
+            except parse_tululu.BookError as e:
+                logger.info(e)
+                print(e, file=sys.stderr)
+
+            books.append(book)
+
+        page_number += 1
+
+    with open("books.json", "w") as file:
+        json.dump(books, file, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':

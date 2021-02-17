@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 import sys
-from urllib.parse import urljoin, urlparse, unquote
+from urllib.parse import urljoin, urlparse, unquote, parse_qs
 
 import requests
 import urllib3
@@ -10,6 +10,11 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 
 logger = logging.getLogger(__name__)
+
+
+class BookError(Exception):
+    def __init__(self, text):
+        self.txt = text
 
 
 def main():
@@ -49,12 +54,19 @@ def main():
         except KeyboardInterrupt:
             print('Скачивание остановлено')
             sys.exit()
+        except BookError as e:
+            logger.exception(e)
+            print(e, file=sys.stderr)
 
 
 def check_for_redirect(response):
     if len(response.history) > 0:
         logger.info('произошел редирект на основную страницу. переходим к следующему id')
         raise requests.TooManyRedirects
+
+
+def is_text_url(tag):
+    return tag.text == 'скачать txt'
 
 
 def parse_book_page(content, library_url):
@@ -66,6 +78,13 @@ def parse_book_page(content, library_url):
     book_image_src = soup.find(class_='bookimage').find('img')['src']
     book_image_url = urljoin(library_url, book_image_src)
 
+    search_text_result = soup.find(class_='d_book').find(is_text_url)
+    if not search_text_result:
+        raise BookError('Текст этой книги отсутствует')
+    book_text_url = soup.find(class_='d_book').find(is_text_url)['href']
+    parsed_book_query = parse_qs(urlparse(book_text_url).query)
+    book_id = parsed_book_query['id'][0]
+
     comments = soup.find_all('div', class_='texts')
     book_comments = [comment.find('span', class_='black').text for comment in comments]
 
@@ -75,9 +94,11 @@ def parse_book_page(content, library_url):
     book = {
         'title': book_title,
         'author': book_author,
-        'image_url': book_image_url,
         'comments': book_comments,
-        'genres': book_genres
+        'genres': book_genres,
+        'image_url': book_image_url,
+        'id': book_id,
+        'text_url': urljoin(library_url, book_text_url)
     }
     return book
 
