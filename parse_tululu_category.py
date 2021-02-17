@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 import os
@@ -21,41 +22,56 @@ def main():
     books_images_path = 'images/'
     os.makedirs(books_images_path, exist_ok=True)
 
+    parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
+    parser.add_argument('--start_page', nargs='?', default='1', type=int, help='с какой страницы начинать')
+    parser.add_argument('--end_page', nargs='?', default='1000', type=int, help='по какую страницу качать')
+    args = parser.parse_args()
+
     books_collection_url = 'https://tululu.org/l55/'
 
     urllib3.disable_warnings()
     books = []
-    pages_number = 2
-    page_number = 1
+    pages_number = args.end_page
+    page_number = args.start_page
 
-    while page_number < 5:
+    while page_number <= pages_number:
         response = requests.get(f'{books_collection_url}{page_number}/', verify=False)
-        logger.info(f'{books_collection_url}{page_number}/')
+        logger.info(f'обрабатывается страница {books_collection_url}{page_number}/')
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
         pages = soup.select('.npage')
-        pages_number = int(pages[-1].text)
+        pages_number = min(int(pages[-1].text), args.end_page)
 
-        book_cards = soup.find_all(class_='d_book')
+        book_cards = soup.select('.ow_px_td .d_book .bookimage a')
         for book_card in book_cards:
-            book_href = book_card.find('a')['href']
-            book_url = urljoin(books_collection_url, book_href)
-            print(book_url)
+            book_url = urljoin(books_collection_url, book_card['href'])
+            logger.debug(f'ищем книгу по адресу {book_url}')
 
-            book_response = requests.get(book_url, verify=False)
-            book_response.raise_for_status()
             try:
+                book_response = requests.get(book_url, verify=False)
+                book_response.raise_for_status()
+                parse_tululu.check_for_redirect(response)
                 book = parse_tululu.parse_book_page(book_response.text, book_url)
                 book_path = parse_tululu.download_txt(book['text_url'], book['id'], book['title'], books_path)
                 img_src = parse_tululu.download_image(book['image_url'], books_images_path)
                 book['book_path'] = book_path
                 book['img_src'] = img_src
-            except parse_tululu.BookError as e:
-                logger.info(e)
+                books.append(book)
+            except requests.HTTPError as e:
                 print(e, file=sys.stderr)
-
-            books.append(book)
+                logger.exception(e)
+            except requests.ConnectionError as e:
+                logger.exception(e)
+                print(e, file=sys.stderr)
+            except requests.TooManyRedirects:
+                print('обнаружен редирект', file=sys.stderr)
+            except KeyboardInterrupt:
+                print('Скачивание остановлено')
+                sys.exit()
+            except parse_tululu.BookError as e:
+                logger.exception(e)
+                print(e, file=sys.stderr)
 
         page_number += 1
 
