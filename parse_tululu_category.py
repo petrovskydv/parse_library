@@ -17,16 +17,7 @@ logger = logging.getLogger(__name__)
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
-    parser.add_argument('--start_page', nargs='?', default='1', type=int, help='с какой страницы начинать')
-    parser.add_argument('--end_page', nargs='?', default='1000', type=int, help='по какую страницу качать')
-    parser.add_argument('--skip_imgs', nargs='?', default=False, type=bool, help='не скачивать картинки')
-    parser.add_argument('--skip_txt', nargs='?', default=False, type=bool, help='не скачивать книги')
-    parser.add_argument('--json_path', nargs='?', default='books.json', type=str,
-                        help='путь к json файлу с результатами')
-    parser.add_argument('--dest_folder', nargs='?', default='', type=str,
-                        help='путь к каталогу с результатами парсинга')
-    args = parser.parse_args()
+    args = get_arguments()
 
     if not args.skip_txt:
         books_path = os.path.join(args.dest_folder, 'books')
@@ -59,7 +50,7 @@ def main():
             try:
                 book_response = requests.get(book_url, verify=False)
                 book_response.raise_for_status()
-                parse_tululu.check_for_redirect(response)
+                parse_tululu.check_for_redirect(book_response)
                 book = parse_tululu.parse_book_page(book_response.text, book_url)
                 if not args.skip_txt:
                     book_path = parse_tululu.download_txt(book['text_url'], book['id'], book['title'], books_path)
@@ -86,6 +77,20 @@ def main():
 
     with open(args.json_path, 'w') as file:
         json.dump(books, file, ensure_ascii=False, indent=4)
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
+    parser.add_argument('--start_page', nargs='?', default='1', type=int, help='с какой страницы начинать')
+    parser.add_argument('--end_page', nargs='?', default='1000', type=int, help='по какую страницу качать')
+    parser.add_argument('--skip_imgs', nargs='?', default=False, type=bool, help='не скачивать картинки')
+    parser.add_argument('--skip_txt', nargs='?', default=False, type=bool, help='не скачивать книги')
+    parser.add_argument('--json_path', nargs='?', default='books.json', type=str,
+                        help='путь к json файлу с результатами')
+    parser.add_argument('--dest_folder', nargs='?', default='', type=str,
+                        help='путь к каталогу с результатами парсинга')
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == '__main__':
