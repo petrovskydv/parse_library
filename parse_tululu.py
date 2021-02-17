@@ -72,23 +72,24 @@ def is_text_url(tag):
 def parse_book_page(content, library_url):
     soup = BeautifulSoup(content, 'lxml')
 
-    title_author_string = soup.find('table').find('h1').text
+    title_author_string = soup.select_one('.ow_px_td h1').text
     book_title, book_author = map(lambda title: title.strip(), title_author_string.split('::'))
 
-    book_image_src = soup.find(class_='bookimage').find('img')['src']
+    book_image_src = soup.select_one('.bookimage img')['src']
     book_image_url = urljoin(library_url, book_image_src)
 
-    search_text_result = soup.find(class_='d_book').find(is_text_url)
+    search_text_result = soup.select_one('table.d_book a[title$=txt]')
     if not search_text_result:
         raise BookError('Текст этой книги отсутствует')
-    book_text_url = soup.find(class_='d_book').find(is_text_url)['href']
+    book_text_url = search_text_result['href']
+
     parsed_book_query = parse_qs(urlparse(book_text_url).query)
     book_id = parsed_book_query['id'][0]
 
-    comments = soup.find_all('div', class_='texts')
-    book_comments = [comment.find('span', class_='black').text for comment in comments]
+    comments = soup.select('.texts .black')
+    book_comments = [comment.text for comment in comments]
 
-    genres_string = soup.find('span', class_='d_book').find_all('a')
+    genres_string = soup.select('span.d_book a')
     book_genres = [genre.text for genre in genres_string]
 
     book = {

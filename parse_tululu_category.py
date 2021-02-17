@@ -34,7 +34,7 @@ def main():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
-        pages = soup.find_all(class_='npage')
+        pages = soup.select('.npage')
         pages_number = int(pages[-1].text)
 
         book_cards = soup.find_all(class_='d_book')
