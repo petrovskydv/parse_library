@@ -86,11 +86,11 @@ def parse_book_page(content, library_url):
     parsed_book_query = parse_qs(urlparse(book_text_url).query)
     book_id = parsed_book_query['id'][0]
 
-    comments = soup.select('.texts .black')
-    book_comments = [comment.text for comment in comments]
+    comment_tags = soup.select('.texts .black')
+    book_comments = [comment_tag.text for comment_tag in comment_tags]
 
-    genres_string = soup.select('span.d_book a')
-    book_genres = [genre.text for genre in genres_string]
+    genre_tags = soup.select('span.d_book a')
+    book_genres = [genre_tag.text for genre_tag in genre_tags]
 
     book = {
         'title': book_title,
