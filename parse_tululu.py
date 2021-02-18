@@ -69,14 +69,14 @@ def is_text_url(tag):
     return tag.text == 'скачать txt'
 
 
-def parse_book_page(content, library_url):
+def parse_book_page(content, book_url):
     soup = BeautifulSoup(content, 'lxml')
 
     title_author_string = soup.select_one('.ow_px_td h1').text
     book_title, book_author = map(lambda title: title.strip(), title_author_string.split('::'))
 
     book_image_src = soup.select_one('.bookimage img')['src']
-    book_image_url = urljoin(library_url, book_image_src)
+    book_image_url = urljoin(book_url, book_image_src)
 
     search_text_result = soup.select_one('table.d_book a[title$=txt]')
     if not search_text_result:
@@ -99,7 +99,7 @@ def parse_book_page(content, library_url):
         'genres': book_genres,
         'image_url': book_image_url,
         'id': book_id,
-        'text_url': urljoin(library_url, book_text_url)
+        'text_url': urljoin(book_url, book_text_url)
     }
     return book
 
