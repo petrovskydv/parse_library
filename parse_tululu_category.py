@@ -81,14 +81,12 @@ def main():
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='парсер онлайн-библиотеки https://tululu.org/')
-    parser.add_argument('--start_page', nargs='?', default='1', type=int, help='с какой страницы начинать')
-    parser.add_argument('--end_page', nargs='?', default='1000', type=int, help='по какую страницу качать')
-    parser.add_argument('--skip_imgs', nargs='?', default=False, type=bool, help='не скачивать картинки')
-    parser.add_argument('--skip_txt', nargs='?', default=False, type=bool, help='не скачивать книги')
-    parser.add_argument('--json_path', nargs='?', default='books.json', type=str,
-                        help='путь к json файлу с результатами')
-    parser.add_argument('--dest_folder', nargs='?', default='', type=str,
-                        help='путь к каталогу с результатами парсинга')
+    parser.add_argument('--start_page', default='1', type=int, help='с какой страницы начинать')
+    parser.add_argument('--end_page', default='1000', type=int, help='по какую страницу качать')
+    parser.add_argument('--skip_imgs', default=False, type=bool, help='не скачивать картинки')
+    parser.add_argument('--skip_txt', default=False, type=bool, help='не скачивать книги')
+    parser.add_argument('--json_path', default='books.json', help='путь к json файлу с результатами')
+    parser.add_argument('--dest_folder', default='', help='путь к каталогу с результатами парсинга')
     args = parser.parse_args()
     return args
 
