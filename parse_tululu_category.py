@@ -34,20 +34,20 @@ def main():
     page_number = args.start_page
 
     while page_number <= pages_number:
-        response = requests.get(f'{books_collection_url}{page_number}/', verify=False)
-        logger.info(f'обрабатывается страница {books_collection_url}{page_number}/')
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'lxml')
+        try:
+            response = requests.get(f'{books_collection_url}{page_number}/', verify=False)
+            logger.info(f'обрабатывается страница {books_collection_url}{page_number}/')
+            response.raise_for_status()
+            parse_tululu.check_for_redirect(response)
+            soup = BeautifulSoup(response.text, 'lxml')
 
-        last_page = int(soup.select_one('.npage:last-of-type').text)
-        pages_number = min(last_page, args.end_page)
+            last_page = int(soup.select_one('.npage:last-of-type').text)
+            pages_number = min(last_page, args.end_page)
 
-        book_cards = soup.select('.ow_px_td .d_book .bookimage a')
-        for book_card in book_cards:
-            book_url = urljoin(books_collection_url, book_card['href'])
-            logger.debug(f'ищем книгу по адресу {book_url}')
-
-            try:
+            book_cards = soup.select('.ow_px_td .d_book .bookimage a')
+            for book_card in book_cards:
+                book_url = urljoin(books_collection_url, book_card['href'])
+                logger.debug(f'ищем книгу по адресу {book_url}')
                 book_response = requests.get(book_url, verify=False)
                 book_response.raise_for_status()
                 parse_tululu.check_for_redirect(book_response)
@@ -59,21 +59,22 @@ def main():
                     img_src = parse_tululu.download_image(book['image_url'], books_images_path)
                     book['img_src'] = img_src
                 books.append(book)
-            except requests.HTTPError as e:
-                print(e, file=sys.stderr)
-                logger.exception(e)
-            except requests.ConnectionError as e:
-                logger.exception(e)
-                print(e, file=sys.stderr)
-            except requests.TooManyRedirects:
-                print('обнаружен редирект', file=sys.stderr)
-            except KeyboardInterrupt:
-                print('Скачивание остановлено')
-                sys.exit()
-            except parse_tululu.BookError as e:
-                print(e, file=sys.stderr)
 
-        page_number += 1
+        except requests.HTTPError as e:
+            print(e, file=sys.stderr)
+            logger.exception(e)
+        except requests.ConnectionError as e:
+            logger.exception(e)
+            print(e, file=sys.stderr)
+        except requests.TooManyRedirects:
+            print('обнаружен редирект', file=sys.stderr)
+        except KeyboardInterrupt:
+            print('Скачивание остановлено')
+            sys.exit()
+        except parse_tululu.BookError as e:
+            print(e, file=sys.stderr)
+        finally:
+            page_number += 1
 
     with open(args.json_path, 'w') as file:
         json.dump(books, file, ensure_ascii=False, indent=4)

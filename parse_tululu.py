@@ -61,7 +61,7 @@ def main():
 
 def check_for_redirect(response):
     if len(response.history) > 0:
-        logger.info('произошел редирект на основную страницу. переходим к следующему id')
+        logger.info('Такой страницы не существует.')
         raise requests.TooManyRedirects
 
 
