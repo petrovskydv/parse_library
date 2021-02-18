@@ -39,8 +39,8 @@ def main():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
-        pages = soup.select('.npage')
-        pages_number = min(int(pages[-1].text), args.end_page)
+        last_page = int(soup.select_one('.npage:last-of-type').text)
+        pages_number = min(last_page, args.end_page)
 
         book_cards = soup.select('.ow_px_td .d_book .bookimage a')
         for book_card in book_cards:
