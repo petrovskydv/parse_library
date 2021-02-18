@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import sys
+import time
 from urllib.parse import urljoin
 
 import requests
@@ -66,6 +67,7 @@ def main():
         except requests.ConnectionError as e:
             logger.exception(e)
             print(e, file=sys.stderr)
+            time.sleep(10)
         except requests.TooManyRedirects:
             print('обнаружен редирект', file=sys.stderr)
         except KeyboardInterrupt:
@@ -73,8 +75,8 @@ def main():
             sys.exit()
         except parse_tululu.BookError as e:
             print(e, file=sys.stderr)
-        finally:
-            page_number += 1
+
+        page_number += 1
 
     with open(args.json_path, 'w') as file:
         json.dump(books, file, ensure_ascii=False, indent=4)

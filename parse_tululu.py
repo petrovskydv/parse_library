@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 from urllib.parse import urljoin, urlparse, unquote, parse_qs
 
 import requests
@@ -49,6 +50,7 @@ def main():
         except requests.ConnectionError as e:
             logger.exception(e)
             print(e, file=sys.stderr)
+            time.sleep(10)
         except requests.TooManyRedirects:
             print('обнаружен редирект', file=sys.stderr)
         except KeyboardInterrupt:
@@ -63,10 +65,6 @@ def check_for_redirect(response):
     if len(response.history) > 0:
         logger.info('Такой страницы не существует.')
         raise requests.TooManyRedirects
-
-
-def is_text_url(tag):
-    return tag.text == 'скачать txt'
 
 
 def parse_book_page(content, book_url):
