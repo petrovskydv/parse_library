@@ -10,9 +10,44 @@
 
     <title>Hello, world!</title>
   </head>
+
   <body>
-    {% for books_column in books_columns %}
-      <div class="container">
+    <div class="container">
+      <nav aria-label="...">
+        <ul class="pagination">
+          {% if current_page == 1 %}
+            <li class="page-item disabled">
+              <a class="page-link" tabindex="-1" aria-disabled="true">Назад</a>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="index{{ current_page-1 }}.html" tabindex="-1" aria-disabled="true">Назад</a>
+            </li>
+          {% endif %}
+
+          {% for page_number in range(pages_count) %}
+            {% if page_number+1 == current_page %}
+              <li class="page-item active" aria-current="page">
+                <a class="page-link" href="index{{ page_number+1 }}.html">{{ page_number+1 }} <span class="sr-only">(current)</span></a>
+              </li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="index{{ page_number+1 }}.html">{{ page_number+1 }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if current_page == pages_count %}
+            <li class="page-item disabled">
+              <a class="page-link">Вперед</a>
+            </li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="index{{ current_page+1 }}.html">Вперед</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      {% for books_column in books_columns %}
         <div class="row">
           {% for book in books_column %}
             <div class="col">
@@ -33,10 +68,8 @@
             </div>
           {% endfor %}
         </div>
-      </div>
-
-    {% endfor %}
-
+      {% endfor %}
+    </div>
 
     <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>

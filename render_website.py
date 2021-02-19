@@ -12,6 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 def on_reload():
+    for page_number, books_page in enumerate(books_pages):
+        books_columns = list(chunked(books_page, 2))
+        rendered_page = template.render(books_columns=books_columns, pages_count=len(books_pages),
+                                        current_page=page_number + 1)
+
+        index_path = os.path.join(pages_path, f'index{page_number + 1}.html')
+        with open(index_path, 'w', encoding="utf8") as file:
+            file.write(rendered_page)
+
+
+if __name__ == '__main__':
     args = parse_tululu_category.get_arguments()
     json_path = os.path.join(args.dest_folder, args.json_path)
 
@@ -33,15 +44,7 @@ def on_reload():
         book['img_src'] = book['img_src'].replace(os.sep, '/')
 
     books_pages = list(chunked(books, 20))
-    for page_number, books_page in enumerate(books_pages):
-        books_columns = list(chunked(books_page, 2))
-        rendered_page = template.render(books_columns=books_columns)
-        index_path = os.path.join(pages_path, f'index{page_number+1}.html')
-        with open(index_path, 'w', encoding="utf8") as file:
-            file.write(rendered_page)
 
-
-if __name__ == '__main__':
     on_reload()
 
     server = Server()
