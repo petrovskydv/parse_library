@@ -2,3 +2,4 @@ requests~=2.25.1
 bs4~=0.0.1
 pathvalidate~=2.3.2
 lxml~=4.6.2
+Jinja2~=2.11.2
