@@ -69,7 +69,7 @@ def main():
 
         page_number += 1
 
-    with open(json_path, 'w') as file:
+    with open(json_path, 'w', encoding='utf-8') as file:
         json.dump(books, file, ensure_ascii=False, indent=4)
 
 
@@ -108,7 +108,7 @@ def get_arguments():
     parser.add_argument('--skip_imgs', action='store_true', help='не скачивать картинки')
     parser.add_argument('--skip_txt', action='store_true', help='не скачивать книги')
     parser.add_argument('--json_path', default='books.json', help='путь к json файлу с результатами')
-    parser.add_argument('--dest_folder', default='static', help='путь к каталогу с результатами парсинга')
+    parser.add_argument('--dest_folder', default='media', help='путь к каталогу с результатами парсинга')
     args = parser.parse_args()
     return args
 

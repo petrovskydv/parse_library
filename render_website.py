@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -8,11 +7,8 @@ from more_itertools import chunked
 
 import parse_tululu_category
 
-logger = logging.getLogger(__name__)
-
 
 def on_reload():
-    print('перезагрузка')
     template = env.get_template('template.html')
     for page_number, books_page in enumerate(books_pages):
         books_columns = list(chunked(books_page, 2))
@@ -33,19 +29,22 @@ if __name__ == '__main__':
     pages_path = 'pages'
     os.makedirs(pages_path, exist_ok=True)
 
+    books_per_page_number = 20
+
     env = Environment(
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml'])
     )
 
-    with open(json_path, 'r') as file:
+    with open(json_path, 'r', encoding='utf-8') as file:
         books_json = file.read()
     books = json.loads(books_json)
+    # заменяем обратные слеши для шаблона HTML
     for book in books:
-        book['book_path'] = book['book_path'].replace(os.sep, '/')
-        book['img_src'] = book['img_src'].replace(os.sep, '/')
+        book['book_path'] = book['book_path'].replace('\\', '/')
+        book['img_src'] = book['img_src'].replace('\\', '/')
 
-    books_pages = list(chunked(books, 20))
+    books_pages = list(chunked(books, books_per_page_number))
 
     on_reload()
 
