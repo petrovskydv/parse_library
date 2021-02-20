@@ -41,6 +41,19 @@ python parse_tululu_category.py
 python parse_tululu_category.py --start_page 200 --end_page 210 --skip_imgs --dest_folder fantastic
 
 ```
+### Просмотр скачанных книг
+Из скачанных файлов можно свормировать сайт скриптом `render_website.py`
+Пример запуска скрипта, который сформирует сайт используя json файл  `my_books.json` и каталог с результатами `my_media` парсинга:
+```
+python render_website.py json_path my_books.json dest_folder my_media
+```
+В результате в папке `pages` сформируются страницы сайта `index1.html`, `index2.html`, `index3.html` и т.д.
+
+Для просмотра сайта нужно скачать на свой компьютер папки `madea`, `static`, `pages`, перейти в папку `pages` и открыть один из `html` файлов.
+Ниже образец сайта:
+![img.png](img.png)
+
+По этой [ссылке](https://petrovskydv.github.io/parse_library/pages/index1.html) можно посмотреть этот образец без скачивания.
 
 ## Цель проекта
 Код написан в образовательных целях на онлайн-курсе для веб-разработчиков [dvmn.org](https://dvmn.org/).
