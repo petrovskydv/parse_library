@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -22,7 +23,11 @@ def on_reload():
 
 
 if __name__ == '__main__':
-    args = parse_tululu_category.get_arguments()
+
+    parser = argparse.ArgumentParser(description='рендеринг сайта скачанных книг')
+    parser.add_argument('json_path', nargs='?', default='books.json', help='путь к json файлу с результатами')
+    parser.add_argument('dest_folder', nargs='?', default='media', help='путь к каталогу с результатами парсинга')
+    args = parser.parse_args()
     json_path = os.path.join(args.dest_folder, args.json_path)
 
     pages_path = 'pages'
