@@ -38,8 +38,6 @@ if __name__ == '__main__':
         autoescape=select_autoescape(['html', 'xml'])
     )
 
-
-
     with open(json_path, 'r') as file:
         books_json = file.read()
     books = json.loads(books_json)
