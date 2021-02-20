@@ -9,9 +9,9 @@ import parse_tululu_category
 
 
 def on_reload():
-    template = env.get_template('template.html')
+    template = env.get_template(template_path)
     for page_number, books_page in enumerate(books_pages):
-        books_columns = list(chunked(books_page, 2))
+        books_columns = list(chunked(books_page, columns_number))
         rendered_page = template.render(books_columns=books_columns, pages_count=len(books_pages),
                                         current_page=page_number + 1)
 
@@ -22,14 +22,15 @@ def on_reload():
 
 
 if __name__ == '__main__':
-
     args = parse_tululu_category.get_arguments()
     json_path = os.path.join(args.dest_folder, args.json_path)
 
     pages_path = 'pages'
     os.makedirs(pages_path, exist_ok=True)
 
+    template_path = 'template.html'
     books_per_page_number = 20
+    columns_number = 2
 
     env = Environment(
         loader=FileSystemLoader('.'),
@@ -49,5 +50,5 @@ if __name__ == '__main__':
     on_reload()
 
     server = Server()
-    server.watch('template.html', on_reload)
+    server.watch(template_path, on_reload)
     server.serve(root='.')
