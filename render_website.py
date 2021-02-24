@@ -1,28 +1,31 @@
 import argparse
 import json
+import logging
 import os
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
 from more_itertools import chunked
 
-import parse_tululu_category
+logger = logging.getLogger(__name__)
 
 
 def on_reload():
     template = env.get_template(template_path)
-    for page_number, books_page in enumerate(books_pages):
+    for page_number, books_page in enumerate(books_pages, start=1):
         books_columns = list(chunked(books_page, columns_number))
         rendered_page = template.render(books_columns=books_columns, pages_count=len(books_pages),
-                                        current_page=page_number + 1)
+                                        current_page=page_number)
 
-        index_path = os.path.join(pages_path, f'index{page_number + 1}.html')
+        index_path = os.path.join(pages_path, f'index{page_number}.html')
         with open(index_path, 'w', encoding="utf8") as file:
             file.write(rendered_page)
-            print(index_path)
+            logger.info(f'processed {index_path}')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.ERROR)
+    logger.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser(description='рендеринг сайта скачанных книг')
     parser.add_argument('json_path', nargs='?', default='books.json', help='путь к json файлу с результатами')
